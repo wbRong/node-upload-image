@@ -9,7 +9,6 @@ const koaBody = require('koa-body')
 const multer = require('@koa/multer')
 
 const listObj = {
-  // imgUrl: '',
   imgUrlList: []
 }
 
@@ -18,11 +17,10 @@ const storage = multer.diskStorage({
     // 存放路径
     cb(null, './static/img')
   },
-  filename (req, file, cb) {
-    const fileFormat = (file.originalname).split('.')
-    console.log(fileFormat);
-    cb(null, Date.now() + '.' + fileFormat[fileFormat.length - 1])
-  }
+  filename(req, file, cb) {
+    const fileFormat = file.originalname.split(".")
+    cb(null, Date.now().toString().substring(5) + "." + fileFormat[fileFormat.length - 1])
+  },
 })
 
 const upload = multer({ storage })
@@ -31,15 +29,19 @@ app.use(static(path.join(__dirname, 'static')))
 
 // 单文件上传
 router.post('/upload', upload.single('file'), async (ctx) => {
+  const { filename ,mimetype } = ctx.file
   // console.log('ctx.request.body', ctx.file.filename)
   // console.log('ctx.request.body', ctx.file)
-  ctx.body = { url: `http://localhost:3000/img/${ctx.file.filename}` }
+  ctx.body = { 
+    url: `http://localhost:3000/img/${filename}` ,
+    type: mimetype
+  }
 })
 
 // 多文件上传
 router.post('/upload-multiple-files', upload.fields([
     { name: 'avatar', maxCount: 3 }, { name: 'boop', maxCount: 2 }
-  ]), ctx => {
+  ]), async ctx => {
     // console.log('ctx.request.files', ctx.request.files)
     ctx.body = { url: listObj.imgUrlList }
   }
